@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JARVIS CAD</title>
+    <link rel="stylesheet" href="styles.css?v=20260610b" />
+  </head>
+  <body>
+    <script>
+      try {
+        const saved = JSON.parse(localStorage.getItem("dispatchDesk.v2") || "{}");
+        if (saved.visualMode === "still") document.body.classList.add("is-still-mode");
+      } catch {}
+    </script>
+    <div class="startup-hud" aria-hidden="true">
+      <div class="startup-network">
+        <span class="node node-a"></span>
+        <span class="node node-b"></span>
+        <span class="node node-c"></span>
+        <span class="node node-d"></span>
+        <span class="node node-e"></span>
+        <span class="node node-f"></span>
+      </div>
+      <div class="startup-hud-ring"></div>
+      <div class="startup-hud-core">
+        <div class="startup-hud-text" id="startupHudTitle">J.A.R.V.I.S. INITIALIZING</div>
+        <div class="startup-hud-status" id="startupHudStatus">Building Runtime Environment</div>
+        <div class="startup-hud-progress" aria-hidden="true"><span></span></div>
+        <div class="startup-modules" aria-hidden="true">
+          <span>Runtime</span>
+          <span>Dispatch</span>
+          <span>Weather</span>
+          <span>Alerts</span>
+        </div>
+      </div>
+      <div class="startup-metrics" aria-hidden="true">
+        <span>Latency 12ms</span>
+        <span>Runtime 99.98%</span>
+        <span>Secure Session</span>
+      </div>
+    </div>
+    <div class="app-shell">
+      <div class="hud-ambient" aria-hidden="true">
+        <div class="hud-ring hud-ring-one"></div>
+        <div class="hud-ring hud-ring-two"></div>
+        <div class="hud-ring hud-ring-three"></div>
+        <div class="hud-telemetry hud-telemetry-one">
+          SYS 17249<br />
+          WX-LINK 99.7<br />
+          ALERT BUS 03<br />
+          CAD IO READY
+        </div>
+        <div class="hud-telemetry hud-telemetry-two">
+          ROUTE 08.41<br />
+          SIGNAL 0.98<br />
+          GRID 43.07<br />
+          STATUS NOMINAL
+        </div>
+        <div class="hud-radar-sweep"></div>
+      </div>
+      <header class="jarvis-masthead" aria-label="Dashboard title">
+        <button class="jarvis-title" id="visualModeButton" type="button" title="Toggle animated/still mode">J.A.R.V.I.S</button>
+      </header>
+
+      <header class="topbar" aria-label="Operator tools">
+        <div class="identity-cell">
+          <p class="eyebrow">Operator ID</p>
+          <div class="operator-number locked-operator" id="operatorButton" title="Operator number">
+            <span id="operatorNumber">Set #</span>
+          </div>
+        </div>
+        <div class="identity-cell">
+          <p class="eyebrow">Station Assignment</p>
+          <button class="station-assignment" id="stationButton" type="button" title="Edit station assignment">
+            <span id="stationAssignment">Set Station</span>
+          </button>
+        </div>
+        <div class="identity-cell">
+          <p class="eyebrow">ASO</p>
+          <button class="service-status" id="asoButton" type="button" title="Toggle ASO status">
+            <span id="asoStatus">Not in Service</span>
+          </button>
+        </div>
+        <div class="identity-cell">
+          <p class="eyebrow">Belt Truck</p>
+          <button class="service-status" id="beltLineButton" type="button" title="Toggle Belt Truck status">
+            <span id="beltLineStatus">Not in Service</span>
+          </button>
+        </div>
+        <div class="identity-cell">
+          <p class="eyebrow">Break Times</p>
+          <div class="break-time-row">
+            <button class="break-times" id="breakTimesButton" type="button" title="Edit or acknowledge break times">
+              <span id="breakTimes">Set Breaks</span>
+            </button>
+            <button class="tool-icon secondary-icon break-reset-button" id="resetBreakTimesButton" type="button" aria-label="Reset break times" title="Reset break times">&#8634;</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="status-banner-row" aria-label="Priority status banners">
+        <details class="top-alert prcfs-alert" id="prcfsAlert">
+          <summary id="prcfsAlertSummary">No PRCFS</summary>
+          <div class="banner-list" id="prcfsAlertList"></div>
+        </details>
+        <details class="top-alert channel-use-alert" id="channelUseAlert">
+          <summary id="channelUseAlertSummary">No Channels In Use</summary>
+          <div class="banner-list" id="channelUseAlertList"></div>
+        </details>
+      </div>
+
+      <details class="dispatcher-banner" id="dispatcherAlertBanner">
+        <summary id="dispatcherAlertSummary">No Dispatcher Alerts</summary>
+        <div class="dispatcher-banner-body">
+          <form class="banner-entry-form" id="dispatcherAlertForm" autocomplete="off">
+            <input id="dispatcherAlertInput" name="alert" type="text" placeholder="Weather, safety hazard, general note" required />
+            <button class="icon-button" id="addDispatcherAlertButton" type="button" aria-label="Add dispatcher alert" title="Add dispatcher alert">+</button>
+          </form>
+          <div class="embedded-list" id="dispatcherAlertList"></div>
+        </div>
+      </details>
+
+      <main class="dashboard">
+        <section class="tool-panel custom-notes" aria-labelledby="notes-title">
+          <div class="section-head">
+            <h2 id="notes-title">Custom Notes</h2>
+            <button class="icon-button" id="addNoteTabButton" type="button" aria-label="Add custom note">+</button>
+          </div>
+          <div class="note-selector-row">
+            <select id="noteSelector" aria-label="Choose custom note section"></select>
+            <button class="tool-icon edit-button" id="editNoteButton" type="button" aria-label="Edit selected note" title="Edit selected note">&#9998;</button>
+            <button class="tool-icon delete-button" id="deleteNoteButton" type="button" aria-label="Delete selected note" title="Delete selected note">-</button>
+          </div>
+          <div class="note-view" id="noteView"></div>
+          <div class="cad-copy-tabs" aria-label="CAD copy shortcuts">
+            <button class="cad-copy-tab" id="copy911AButton" type="button">911A</button>
+            <button class="cad-copy-tab" id="copy911UButton" type="button">911U</button>
+            <button class="cad-copy-tab" id="copy911UPocketButton" type="button">911U-P</button>
+            <button class="cad-copy-tab" id="copy911OButton" type="button">911O</button>
+          </div>
+          <div class="backup-actions">
+            <button class="save-backup-button" id="saveBackupButton" type="button" title="Force local save">Save</button>
+          </div>
+        </section>
+
+        <div class="middle-stack">
+          <section class="tool-panel reassurance-panel" aria-labelledby="phrases-title">
+            <div class="section-head reassurance-head">
+              <div>
+                <h1 id="phrases-title">Phrases</h1>
+              </div>
+              <div class="button-row">
+                <button class="tool-icon secondary-icon" id="addPhraseSectionButton" type="button" aria-label="Add phrase section" title="Add phrase section">+</button>
+                <button class="tool-icon primary-icon" id="addPhraseButton" type="button" aria-label="Add phrase" title="Add phrase">+</button>
+              </div>
+            </div>
+            <div class="category-tabs" id="categoryTabs" role="tablist" aria-label="Phrase categories"></div>
+            <div class="section-tools">
+              <button class="tool-icon delete-button" id="deletePhraseSectionButton" type="button" aria-label="Delete selected phrase section" title="Delete selected phrase section">-</button>
+            </div>
+            <div class="phrase-list" id="phraseList"></div>
+          </section>
+
+          <section class="tool-panel weather-tool" aria-labelledby="weather-title">
+            <div class="section-head compact-head">
+              <h2 id="weather-title">Dane County Weather</h2>
+              <button class="icon-button" id="weatherSearchButton" type="button" aria-label="Search current weather" title="Search current weather">+</button>
+            </div>
+            <form class="weather-form" id="weatherForm" autocomplete="off">
+              <input id="weatherAddressInput" name="address" type="text" placeholder="Address in Dane County" aria-label="Dane County address" required />
+              <select class="weather-choice" id="weatherAddressChoice" aria-label="Choose matched address" hidden></select>
+            </form>
+            <div class="weather-result" id="weatherResult">Enter an address for current observed weather.</div>
+          </section>
+        </div>
+
+        <section class="tool-panel ops-console" aria-label="Status entry controls">
+          <section class="compact-tool">
+            <div class="section-head compact-head">
+              <h2>PRCFS</h2>
+              <button class="icon-button" id="addPrcfsButton" type="button" aria-label="Add PRCFS channel" title="Add PRCFS channel">+</button>
+            </div>
+            <form class="compact-form" id="prcfsForm" autocomplete="off">
+              <input id="prcfsChannelInput" name="channel" type="text" placeholder="Channel" aria-label="PRCFS channel" required />
+              <select id="prcfsStatusInput" name="status" aria-label="PRCFS status">
+                <option value="">PRCFS</option>
+                <option>Holding</option>
+              </select>
+            </form>
+            <div class="status-list" id="prcfsList"></div>
+          </section>
+
+          <section class="compact-tool">
+            <div class="section-head compact-head">
+              <h2>Channel / Call ID</h2>
+              <button class="icon-button" id="addChannelUseButton" type="button" aria-label="Add channel in use" title="Add channel in use">+</button>
+            </div>
+            <form class="compact-form" id="channelUseForm" autocomplete="off">
+              <input id="channelUseInput" name="channel" type="text" placeholder="Channel" aria-label="Channel" required />
+              <input id="callIdInput" name="callId" type="text" inputmode="numeric" maxlength="3" pattern="[0-9]{0,3}" placeholder="Call ID" aria-label="Call ID" />
+              <button class="dispatcher-toggle" id="dispatcherAssignedButton" type="button" aria-pressed="false" title="Dispatcher assigned">DSP</button>
+            </form>
+            <div class="status-list" id="channelUseList"></div>
+          </section>
+
+        </section>
+      </main>
+    </div>
+
+    <div class="break-overlay" id="breakOverlay" aria-live="polite" hidden>
+      <div class="break-hud-bg" aria-hidden="true">
+        <div class="break-bg-panel break-bg-uptime"><span>SYSTEM INTEGRITY</span><strong>100%</strong></div>
+        <div class="break-bg-panel break-bg-stream"><span>// CORE DATA STREAM</span><code>0x7A3F&nbsp;&nbsp;0x1C9A&nbsp;&nbsp;0x5D2E<br />0x8A3F&nbsp;&nbsp;0x6E2D&nbsp;&nbsp;0x9B18</code></div>
+        <div class="break-bg-panel break-bg-flow"><span>DATA FLOW</span><strong>98.7%</strong></div>
+        <div class="break-bg-panel break-bg-processes"><span>ACTIVE PROCESSES</span><code>CAD_MONITOR ONLINE<br />WEATHER_SVC ONLINE<br />ALERT_ENGINE ONLINE<br />VOICE_CHANNELS NORMAL<br />DATABASE_SYNC ONLINE</code></div>
+        <div class="break-bg-panel break-bg-load"><span>SYSTEM LOAD</span><strong>18%</strong></div>
+        <div class="break-bg-panel break-bg-channel"><span>CHANNEL MONITOR</span><code>DISP 1 STATUS: NORMAL<br />DISP 2 STATUS: NORMAL<br />DISP 3 STATUS: NORMAL<br />DISP 6 STATUS: NORMAL</code></div>
+        <div class="break-bg-panel break-bg-packets"><span>DATA PACKETS</span><strong>7.23 M/S</strong></div>
+        <div class="break-corner-radar break-corner-radar-left"></div>
+        <div class="break-corner-radar break-corner-radar-right"></div>
+      </div>
+      <div class="break-overlay-center">
+        <div class="break-core-module" aria-hidden="true">
+          <div class="break-core-ring">
+            <div class="break-core-icon">☕</div>
+          </div>
+        </div>
+        <div class="break-overlay-title">ON BREAK</div>
+        <div class="break-station" id="breakStation">Set Station</div>
+      </div>
+      <button class="return-break-button" id="returnBreakButton" type="button">Return</button>
+    </div>
+
+    <div class="break-due-overlay" id="breakDueOverlay" aria-live="assertive" hidden>
+      <div class="break-due-title">Break Time</div>
+      <button class="ack-break-button" id="ackBreakButton" type="button">Acknowledge</button>
+    </div>
+
+    <dialog id="editDialog">
+      <form method="dialog" class="dialog-card" id="dialogForm">
+        <div class="section-head">
+          <h2 id="dialogTitle">Edit</h2>
+          <button class="icon-button subtle" value="cancel" type="submit" aria-label="Close">x</button>
+        </div>
+        <div id="dialogFields" class="dialog-fields"></div>
+        <menu class="dialog-actions">
+          <button class="secondary-button" value="cancel" type="submit">Cancel</button>
+          <button class="primary-button" value="default" type="submit">Save</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script src="app.js?v=20260610b"></script>
+  </body>
+</html>
